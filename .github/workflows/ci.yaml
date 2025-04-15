@@ -1,4 +1,4 @@
-name: Build and Test CMake C++ Project
+name: CI
 
 on:
   push:
@@ -31,15 +31,22 @@ jobs:
             c_compiler: cl
             cxx_compiler: cl
             generator: "Visual Studio 17 2022"
+            generator-code: vs2022
           - os: windows-2022
             c_compiler: cl
             cxx_compiler: cl
             generator: "Visual Studio 17 2022"
+            generator-code: vs2022
           - c_compiler: clang
             cxx_compiler: clang++
           - c_compiler: gcc
             cxx_compiler: g++
+          - generator: Ninja
+            generator-code: ninja
+          - generator: "Unix Makefiles"
+            generator-code: make
     runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }}-${{ matrix.c_compiler }}-${{ matrix.generator-code }}
 
     steps:
       - name: Checkout repository

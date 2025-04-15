@@ -24,11 +24,38 @@
 
 ## ✅ Compatibility
 
-| Platform | GCC | Clang | MSVC |
-|----------|-----|--------|------|
-| Ubuntu   | ✅   | ✅      | ❌    |
-| macOS    | ✅   | ✅      | ❌    |
-| Windows  | ❌   | ❌      | ✅    |
+| OS           | Compiler | Generator             | Status |
+|--------------|----------|------------------------|--------|
+| macOS 13     | Clang    | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-13-clang-ninja) |
+| macOS 13     | Clang    | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-13-clang-make) |
+| macOS 13     | GCC      | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-13-gcc-ninja) |
+| macOS 13     | GCC      | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-13-gcc-make) |
+| macOS 14     | Clang    | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-14-clang-ninja) |
+| macOS 14     | Clang    | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-14-clang-make) |
+| macOS 14     | GCC      | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-14-gcc-ninja) |
+| macOS 14     | GCC      | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-14-gcc-make) |
+| macOS 15     | Clang    | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-15-clang-ninja) |
+| macOS 15     | Clang    | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-15-clang-make) |
+| macOS 15     | GCC      | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-15-gcc-ninja) |
+| macOS 15     | GCC      | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-15-gcc-make) |
+| Ubuntu 22.04 | Clang    | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-22.04-clang-ninja) |
+| Ubuntu 22.04 | Clang    | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-22.04-clang-make) |
+| Ubuntu 22.04 | GCC      | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-22.04-gcc-ninja) |
+| Ubuntu 22.04 | GCC      | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-22.04-gcc-make) |
+| Ubuntu 24.04 | Clang    | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-24.04-clang-ninja) |
+| Ubuntu 24.04 | Clang    | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-24.04-clang-make) |
+| Ubuntu 24.04 | GCC      | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-24.04-gcc-ninja) |
+| Ubuntu 24.04 | GCC      | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-24.04-gcc-make) |
+| Windows 2019 | Clang    | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2019-clang-ninja) |
+| Windows 2019 | Clang    | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2019-clang-make) |
+| Windows 2019 | GCC      | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2019-gcc-ninja) |
+| Windows 2019 | GCC      | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2019-gcc-make) |
+| Windows 2019 | MSVC     | Visual Studio 17 2022  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2019-msvc-vs2022) |
+| Windows 2022 | Clang    | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2022-clang-ninja) |
+| Windows 2022 | Clang    | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2022-clang-make) |
+| Windows 2022 | GCC      | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2022-gcc-ninja) |
+| Windows 2022 | GCC      | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2022-gcc-make) |
+| Windows 2022 | MSVC     | Visual Studio 17 2022  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2022-msvc-vs2022) |
 
 | C++ Standard |
 |---------------|
