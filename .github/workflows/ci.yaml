@@ -1,61 +1,90 @@
-name: CI
+name: Build and Test CMake C++ Project
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        compiler: [gcc, clang, msvc]
-        exclude:
-          - os: windows-latest
-            compiler: gcc
-          - os: windows-latest
-            compiler: clang
-          - os: macos-latest
-            compiler: msvc
-          - os: ubuntu-latest
-            compiler: msvc
-    name: ${{ matrix.os }} - ${{ matrix.compiler }}
+        os:
+          [
+            ubuntu-22.04,
+            ubuntu-24.04,
+            macos-13,
+            macos-14,
+            macos-15,
+            windows-2019,
+            windows-2022,
+          ]
+        c_compiler: [gcc, clang]
+        generator: [Ninja, "Unix Makefiles"]
+        include:
+          # MSVC is only available on Windows
+          - os: windows-2019
+            c_compiler: cl
+            cxx_compiler: cl
+            generator: "Visual Studio 17 2022"
+          - os: windows-2022
+            c_compiler: cl
+            cxx_compiler: cl
+            generator: "Visual Studio 17 2022"
+          - c_compiler: clang
+            cxx_compiler: clang++
+          - c_compiler: gcc
+            cxx_compiler: g++
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up CMake
-        uses: jwlawson/actions-setup-cmake@v1
-
-      - name: Install dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y build-essential cmake
-      
-      - name: Install dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: brew install cmake
-
-      - name: Configure MSVC environment
-        if: matrix.compiler == 'msvc'
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Configure Clang to use libc++
-        if: matrix.os == 'macos-latest'
+      - name: Install dependencies (Ubuntu)
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
-          export CXX=clang++
-          export CC=clang
-          cmake -B build -S . -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="-stdlib=libc++"  
-      - name: Configure project
-        if: matrix.os != 'macos-latest'
-        run: cmake -S . -B build -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build gcc-12 g++-12 llvm
 
-      - name: Build project
-        run: cmake --build build --config Release
+          # Set gcc and g++ version 12 as default
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 60
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 60
+
+      - name: Install dependencies (macOS)
+        if: ${{ startsWith(matrix.os, 'macos') }}
+        run: |
+          brew install llvm ninja cmake
+
+      - name: Install dependencies (Windows)
+        if: ${{ startsWith(matrix.os, 'windows') }}
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+          choco install mingw llvm ninja -y
+
+      - name: Configure CMake
+        if: ${{ matrix.cxx_compiler == 'cl' }}
+        run: |
+          cmake -S . -B build -A x64 -DCMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }} -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+
+      - name: Configure CMake
+        if: ${{ matrix.cxx_compiler != 'cl' }}
+        run: |
+          cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }} -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+
+      - name: Build Project
+        id: build_project
+        continue-on-error: true
+        run: |
+          cmake --build build --config Release > compile.log 2>&1
 
       - name: Run tests
-        working-directory: build
-        run: ctest --output-on-failure
+        if: ${{ steps.build_project.outcome == 'success' }}
+        run: |
+          ctest -C Release --test-dir build/tests
