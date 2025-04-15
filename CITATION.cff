@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Tsvetanov
+    given-names: Alex
+    orcid: https://orcid.org/0009-0001-8369-150X
+    affiliation: Independent Developer
+
+title: "pubsub-lib: A Type-Safe C++ Publish-Subscribe Framework"
+date-released: 2024-04-15
+version: 1.0.0
+license: Apache-2.0
+repository-code: https://github.com/cpp-for-everything/pubsub-lib
+url: https://github.com/cpp-for-everything/pubsub-lib
+
+abstract: "pubsub-lib is a modern C++20 header-only publish-subscribe library. It provides a type-safe event system with lifetime-aware subscribers and RAII-based unsubscription."
