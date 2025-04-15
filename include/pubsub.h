@@ -250,9 +250,7 @@ namespace pubsub {
         /**
          * @brief Automatically unsubscribes on destruction.
          */
-        virtual ~Subscriber() {
-            unsubscribe_from_all();
-        }
+        virtual ~Subscriber() = default;
 
         /**
          * @brief Tracks a publisher.

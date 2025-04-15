@@ -4,7 +4,7 @@
 
 ---
 
-[![CI](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yml/badge.svg)](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yml)
+[![CI](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg)](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml)
 ![C++20](https://img.shields.io/badge/C%2B%2B-20-blue)
 ![Header-Only](https://img.shields.io/badge/library-header--only-green)
 ![License](https://img.shields.io/github/license/cpp-for-everything/pubsub-lib)
@@ -83,7 +83,7 @@ ctest --test-dir build
 
 If you use `pubsub-lib` in your research or scientific work, please cite it as:
 
-> Your Name. *pubsub-lib: A Type-Safe C++ Publish-Subscribe Framework*, 2024. https://github.com/cpp-for-everything/pubsub-lib
+> Alex Tsvetanov. *pubsub-lib: A Type-Safe C++ Publish-Subscribe Framework*, 2024. https://github.com/cpp-for-everything/pubsub-lib
 
 You can also use the provided `CITATION.cff` file for reference managers.
 

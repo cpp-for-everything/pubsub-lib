@@ -11,6 +11,10 @@ struct TestEvents {
 
 class TestSubscriber : public Subscriber {
 public:
+    ~TestSubscriber() override {
+        unsubscribe_from_all();
+    }
+
     int ping_count = 0;
     int data_sum = 0;
 

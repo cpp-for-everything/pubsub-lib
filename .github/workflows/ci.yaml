@@ -43,7 +43,14 @@ jobs:
         if: matrix.compiler == 'msvc'
         uses: ilammy/msvc-dev-cmd@v1
 
+      - name: Configure Clang to use libc++
+        if: matrix.os == 'macos-latest'
+        run: |
+          export CXX=clang++
+          export CC=clang
+          cmake -B build -S . -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="-stdlib=libc++"  
       - name: Configure project
+        if: matrix.os != 'macos-latest'
         run: cmake -S . -B build -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
 
       - name: Build project
