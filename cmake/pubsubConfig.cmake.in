@@ -1,0 +1,6 @@
+### pubsubConfig.cmake.in
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/pubsubTargets.cmake")
+
+check_required_components(pubsub)
