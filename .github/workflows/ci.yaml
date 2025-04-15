@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        compiler: [gcc, clang, msvc]
+        exclude:
+          - os: windows-latest
+            compiler: gcc
+          - os: windows-latest
+            compiler: clang
+          - os: macos-latest
+            compiler: msvc
+          - os: ubuntu-latest
+            compiler: msvc
+    name: ${{ matrix.os }} - ${{ matrix.compiler }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v1
+
+      - name: Install dependencies (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake
+
+      - name: Configure MSVC environment
+        if: matrix.compiler == 'msvc'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure project
+        run: cmake -S . -B build -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
+
+      - name: Build project
+        run: cmake --build build --config Release
+
+      - name: Run tests
+        working-directory: build
+        run: ctest --output-on-failure
