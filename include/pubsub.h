@@ -152,6 +152,9 @@ namespace pubsub {
 
         /**
          * @brief Emit an event asynchronously.
+         * @todo Implement and use thread pool with coroutine 
+         * that takes the callbacks and their arguments from 
+         * a queue and calls them when a thread in the pool is free
          */
         template<typename... Args>
         void emit_async(Args... args) {
