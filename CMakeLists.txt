@@ -16,6 +16,9 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
+# Enable OpenMP
+find_package(OpenMP REQUIRED)
+
 # Create target for the library (header-only)
 add_library(pubsub INTERFACE)
 
@@ -24,6 +27,11 @@ target_include_directories(pubsub INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+
+if(OpenMP_CXX_FOUND)
+    add_definitions(-DWITH_OMP)
+    target_link_libraries(pubsub INTERFACE OpenMP::OpenMP_CXX)
+endif()
 
 # Install the headers
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

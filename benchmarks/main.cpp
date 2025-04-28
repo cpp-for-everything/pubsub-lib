@@ -34,6 +34,18 @@ static void BM_PubSubLib_ASYNC(benchmark::State& state) {
 }
 BENCHMARK(BM_PubSubLib_ASYNC);
 
+#ifdef WITH_OMP
+// =============== pubsub-lib async using OpenMP Benchmark ==============
+static void BM_PubSubLib_OMP_ASYNC(benchmark::State& state) {
+    omp_set_num_threads(state.range(0));  // Set the number of OpenMP threads dynamically
+    for (auto _ : state) {
+        pub.emit_omp_async<MyEvent>(42);
+    }
+}
+// Pass the thread count as a "range" argument to the benchmark
+BENCHMARK(BM_PubSubLib_OMP_ASYNC)->Arg(1)->Arg(2)->Arg(4)->Arg(8)->Arg(16);
+#endif
+
 // ================= Boost.Signals2 Benchmark =================
 #ifdef USE_BOOST
 #include <boost/signals2.hpp>

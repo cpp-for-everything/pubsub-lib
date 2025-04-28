@@ -10,6 +10,10 @@
 #include <iostream>
 #include <future>
 
+#ifdef WITH_OMP
+    #include <omp.h>
+#endif
+
 #include "unique_couter.h"
 
 /**
@@ -162,6 +166,19 @@ namespace pubsub {
                 (void)std::async(std::launch::async, cb, args...);
             }
         }
+
+#ifdef WITH_OMP
+        /**
+         * @brief Emit an event asynchronously using OpenMP.
+         */
+        template<typename... Args>
+        void emit_omp_async(Args... args) {
+            #pragma omp parallel for
+            for (const auto& cb : callbacks) {
+                cb(args...);
+            }
+        }
+#endif
     };
 
     /**
@@ -220,6 +237,16 @@ namespace pubsub {
         void emit_async(Args... args) {
             get_handler<Event>()->emit_async(args...);
         }
+
+#ifdef WITH_OMP
+        /**
+         * @brief Emit an event asynchronously using OpenMP to all listeners.
+         */
+        template<auto Event, typename... Args> requires IsEvent<decltype(Event)>
+        void emit_omp_async(Args... args) {
+            get_handler<Event>()->emit_omp_async(args...);
+        }
+#endif
 
         /**
          * @brief Unsubscribe an object from the event.
