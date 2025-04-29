@@ -9,140 +9,152 @@ on:
 jobs:
 
   linux:
+    name: Linux ${{ matrix.os }} - ${{ matrix.compiler }} - ${{ matrix.generator }} - ${{ matrix.build_type }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
         compiler: [gcc, clang]
         generator: [Ninja, "Unix Makefiles"]
-    runs-on: ${{ matrix.os }}
-    name: Linux-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.generator }}
+        build_type: [Debug, Release]
+
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" 17 all
-          sudo apt install -y cmake ninja-build ccache libomp-dev
+
+      - name: Setup compiler and tools
+        run: |
+          sudo apt update
+          sudo apt install -y cmake ninja-build ccache ${{ matrix.compiler }} g++
           echo "CC=${{ matrix.compiler }}" >> $GITHUB_ENV
-          if [[ "${{ matrix.compiler }}" == "gcc" ]]; then
-            echo "CXX=g++" >> $GITHUB_ENV
-          else
-            echo "CXX=clang++" >> $GITHUB_ENV
-            echo "LDFLAGS=-L/usr/lib/llvm-17/lib" >> $GITHUB_ENV
-            echo "CPPFLAGS=-I/usr/lib/llvm-17/include" >> $GITHUB_ENV
-          fi
-      - uses: actions/cache@v4
-        with:
-          path: build
-          key: linux-${{ matrix.compiler }}-${{ matrix.generator }}-build-${{ github.sha }}
-          restore-keys: linux-${{ matrix.compiler }}-${{ matrix.generator }}-build-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.ccache
-          key: linux-${{ matrix.compiler }}-${{ matrix.generator }}-ccache-${{ github.sha }}
-          restore-keys: linux-${{ matrix.compiler }}-${{ matrix.generator }}-ccache-
-      - run: |
+          echo "CXX=${{ matrix.compiler }}++" >> $GITHUB_ENV
+
+      - name: Build OpenMP from source
+        run: |
+          git clone --depth 1 https://github.com/llvm/llvm-project.git
+          cd llvm-project/openmp
+          mkdir build && cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/openmp-install
+          cmake --build . --target install -j$(nproc)
+
+      - name: Configure CMake
+        run: |
           cmake -S . -B build -G "${{ matrix.generator }}" \
             -DCMAKE_C_COMPILER=${{ env.CC }} \
             -DCMAKE_CXX_COMPILER=${{ env.CXX }} \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/openmp-install \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      - run: cmake --build build --config Release --verbose
-      - run: ctest --test-dir build --output-on-failure
 
-  mac:
+      - name: Build
+        run: cmake --build build --verbose
+
+      - name: Test
+        run: |
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/openmp-install/lib:$LD_LIBRARY_PATH
+          ctest --test-dir build --output-on-failure
+
+  macos:
+    name: macOS ${{ matrix.os }} - ${{ matrix.generator }} - ${{ matrix.build_type }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-13, macos-14, macos-15]
+        os: [macos-13, macos-14]
         generator: [Ninja, "Unix Makefiles"]
-        exclude:
-          - os: macos-13
-    runs-on: ${{ matrix.os }}
-    name: macOS-${{ matrix.os }}-${{ matrix.generator }}
+        build_type: [Debug, Release]
+
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          brew install llvm libomp cmake ninja ccache
-          HOMEBREW_PREFIX=$(brew --prefix)
-          echo "PATH=${HOMEBREW_PREFIX}/bin:${HOMEBREW_PREFIX}/opt/llvm/bin:$PATH" >> $GITHUB_ENV
-          echo "LDFLAGS=-L${HOMEBREW_PREFIX}/opt/libomp/lib -L${HOMEBREW_PREFIX}/opt/llvm/lib" >> $GITHUB_ENV
-          echo "CPPFLAGS=-I${HOMEBREW_PREFIX}/opt/libomp/include -I${HOMEBREW_PREFIX}/opt/llvm/include" >> $GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=${HOMEBREW_PREFIX}/opt/libomp;${HOMEBREW_PREFIX}/opt/llvm" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: |
+          brew install cmake ninja ccache llvm
           echo "CC=clang" >> $GITHUB_ENV
           echo "CXX=clang++" >> $GITHUB_ENV
-      - uses: actions/cache@v4
-        with:
-          path: build
-          key: mac-${{ matrix.generator }}-build-${{ github.sha }}
-          restore-keys: mac-${{ matrix.generator }}-build-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.ccache
-          key: mac-${{ matrix.generator }}-ccache-${{ github.sha }}
-          restore-keys: mac-${{ matrix.generator }}-ccache-
-      - run: |
+          echo "CMAKE_PREFIX_PATH=$(brew --prefix llvm)" >> $GITHUB_ENV
+
+      - name: Build OpenMP
+        run: |
+          git clone --depth 1 https://github.com/llvm/llvm-project.git
+          cd llvm-project/openmp
+          mkdir build && cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/openmp-install
+          cmake --build . --target install -j$(sysctl -n hw.logicalcpu)
+
+      - name: Configure
+        run: |
           cmake -S . -B build -G "${{ matrix.generator }}" \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/openmp-install;$CMAKE_PREFIX_PATH" \
             -DCMAKE_C_COMPILER=${{ env.CC }} \
             -DCMAKE_CXX_COMPILER=${{ env.CXX }} \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      - run: cmake --build build --config Release --verbose
-      - run: ctest --test-dir build --output-on-failure
+
+      - name: Build
+        run: cmake --build build --verbose
+
+      - name: Test
+        run: |
+          export DYLD_LIBRARY_PATH=$GITHUB_WORKSPACE/openmp-install/lib:$DYLD_LIBRARY_PATH
+          ctest --test-dir build --output-on-failure
 
   windows:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-2022]
+    name: Windows ${{ matrix.os }} - ${{ matrix.compiler }} - ${{ matrix.generator }} - ${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
-    name: Windows-${{ matrix.os }}-MSVC
-    steps:
-      - uses: actions/checkout@v4
-      - run: choco install cmake ninja ccache -y
-      - run: cmake -S . -B build -A x64
-      - run: cmake --build build --config Release --verbose
-      - run: ctest --test-dir build --output-on-failure
-
-  windows-alt:
     strategy:
       fail-fast: false
       matrix:
         os: [windows-2019, windows-2022]
-        compiler: [mingw, llvm]
+        compiler: [msvc, clang, mingw]
         generator: [Ninja, "Unix Makefiles"]
-        exclude:
-          - os: windows-2019
-            compiler: mingw
-    runs-on: ${{ matrix.os }}
-    name: Windows-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.generator }}
+        build_type: [Debug, Release]
+
     steps:
       - uses: actions/checkout@v4
-      - run: |
+
+      - name: Install dependencies
+        shell: bash
+        run: |
           choco install cmake ninja ccache llvm -y
-          choco install mingw --version=12.2.0
-          echo "CC=${{ matrix.compiler }}" >> $GITHUB_ENV
           if [[ "${{ matrix.compiler }}" == "mingw" ]]; then
+            choco install mingw --version=12.2.0 -y
+            echo "CC=gcc" >> $GITHUB_ENV
             echo "CXX=g++" >> $GITHUB_ENV
-          else
+            echo "PATH=C:/mingw64/bin:$PATH" >> $GITHUB_ENV
+          elif [[ "${{ matrix.compiler }}" == "clang" ]]; then
+            echo "CC=clang" >> $GITHUB_ENV
             echo "CXX=clang++" >> $GITHUB_ENV
+            echo "PATH=C:/Program Files/LLVM/bin:$PATH" >> $GITHUB_ENV
+          else
+            echo "CC=cl.exe" >> $GITHUB_ENV
+            echo "CXX=cl.exe" >> $GITHUB_ENV
           fi
+
+      - name: Build OpenMP
         shell: bash
-      - run: |
+        run: |
+          git clone --depth 1 https://github.com/llvm/llvm-project.git
+          cd llvm-project/openmp
+          mkdir build && cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/openmp-install -DCMAKE_GENERATOR="${{ matrix.generator }}"
+          cmake --build . --target install
+
+      - name: Configure
+        shell: bash
+        run: |
           cmake -S . -B build -G "${{ matrix.generator }}" \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/openmp-install \
             -DCMAKE_C_COMPILER=${{ env.CC }} \
-            -DCMAKE_CXX_COMPILER=${{ env.CXX }} \
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-        shell: bash
-      - name: Add MinGW to PATH (Windows)
-        shell: bash
-        run: |
-          echo "C:/mingw64/bin" >> $GITHUB_PATH
-          echo "C:/mingw64/lib" >> $GITHUB_PATH
-          cp "C:/mingw64/bin/libgomp-1.dll" build/tests/
+            -DCMAKE_CXX_COMPILER=${{ env.CXX }}
+
       - name: Build
-        shell: bash
+        run: cmake --build build --config ${{ matrix.build_type }} --verbose
+
+      - name: Test
         run: |
-          export PATH="/c/mingw64/bin:$PATH"
-          cmake --build build --config Release --verbose
-      - run: ctest --test-dir build --output-on-failure
+          cd build
+          ctest -C ${{ matrix.build_type }} --output-on-failure
