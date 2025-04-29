@@ -27,9 +27,9 @@ jobs:
             echo "CXX=g++" >> $GITHUB_ENV
           else
             echo "CXX=clang++" >> $GITHUB_ENV
+            echo "LDFLAGS=-L/usr/lib/llvm-17/lib" >> $GITHUB_ENV
+            echo "CPPFLAGS=-I/usr/lib/llvm-17/include" >> $GITHUB_ENV
           fi
-          echo "LDFLAGS=-L/usr/lib/llvm-17/lib" >> $GITHUB_ENV
-          echo "CPPFLAGS=-I/usr/lib/llvm-17/include" >> $GITHUB_ENV
       - uses: actions/cache@v4
         with:
           path: build
