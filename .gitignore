@@ -363,7 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # build folder
-build/
+build*/
 
 # VSCode config
 .vscode/
