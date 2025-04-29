@@ -61,10 +61,11 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           brew install llvm libomp cmake ninja ccache
-          echo "PATH=/opt/homebrew/opt/llvm/bin:/opt/homebrew/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
-          echo "LDFLAGS=-L/opt/homebrew/opt/libomp/lib -L/opt/homebrew/opt/llvm/lib" >> $GITHUB_ENV
-          echo "CPPFLAGS=-I/opt/homebrew/opt/libomp/include -I/opt/homebrew/opt/llvm/include" >> $GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=/opt/homebrew/opt/libomp;/opt/homebrew/opt/llvm" >> $GITHUB_ENV
+          HOMEBREW_PREFIX=$(brew --prefix)
+          echo "PATH=${HOMEBREW_PREFIX}/bin:${HOMEBREW_PREFIX}/opt/llvm/bin:$PATH" >> $GITHUB_ENV
+          echo "LDFLAGS=-L${HOMEBREW_PREFIX}/opt/libomp/lib -L${HOMEBREW_PREFIX}/opt/llvm/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I${HOMEBREW_PREFIX}/opt/libomp/include -I${HOMEBREW_PREFIX}/opt/llvm/include" >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=${HOMEBREW_PREFIX}/opt/libomp;${HOMEBREW_PREFIX}/opt/llvm" >> $GITHUB_ENV
           echo "CC=clang" >> $GITHUB_ENV
           echo "CXX=clang++" >> $GITHUB_ENV
       - uses: actions/cache@v4
@@ -112,7 +113,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          choco install cmake ninja ccache llvm mingw -y
+          choco install cmake ninja ccache llvm -y
+          choco install mingw --version=12.2.0
           echo "CC=${{ matrix.compiler }}" >> $GITHUB_ENV
           if [[ "${{ matrix.compiler }}" == "mingw" ]]; then
             echo "CXX=g++" >> $GITHUB_ENV
@@ -127,6 +129,12 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         shell: bash
+      - name: Add MinGW to PATH (Windows)
+        shell: bash
+        run: |
+          echo "C:/mingw64/bin" >> $GITHUB_PATH
+          echo "C:/mingw64/lib" >> $GITHUB_PATH
+          cp "C:/mingw64/bin/libgomp-1.dll" build/tests/
       - run: cmake --build build --config Release --verbose
       - run: ctest --test-dir build --output-on-failure
 
