@@ -2,96 +2,131 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-  build:
+
+  linux:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          [
-            ubuntu-22.04,
-            ubuntu-24.04,
-            macos-13,
-            macos-14,
-            macos-15,
-            windows-2019,
-            windows-2022,
-          ]
-        c_compiler: [gcc, clang]
+        os: [ubuntu-22.04, ubuntu-24.04]
+        compiler: [gcc, clang]
         generator: [Ninja, "Unix Makefiles"]
-        include:
-          # MSVC is only available on Windows
-          - os: windows-2019
-            c_compiler: cl
-            cxx_compiler: cl
-            generator: "Visual Studio 17 2022"
-            generator-code: vs2022
-          - os: windows-2022
-            c_compiler: cl
-            cxx_compiler: cl
-            generator: "Visual Studio 17 2022"
-            generator-code: vs2022
-          - c_compiler: clang
-            cxx_compiler: clang++
-          - c_compiler: gcc
-            cxx_compiler: g++
-          - generator: Ninja
-            generator-code: ninja
-          - generator: "Unix Makefiles"
-            generator-code: make
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }}-${{ matrix.c_compiler }}-${{ matrix.generator-code }}
-
+    name: Linux-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.generator }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - run: |
+          sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" 17 all
+          sudo apt install -y cmake ninja-build ccache libomp-17-dev
+          echo "CC=${{ matrix.compiler }}" >> $GITHUB_ENV
+          if [[ "${{ matrix.compiler }}" == "gcc" ]]; then
+            echo "CXX=g++" >> $GITHUB_ENV
+          else
+            echo "CXX=clang++" >> $GITHUB_ENV
+          fi
+          echo "LDFLAGS=-L/usr/lib/llvm-17/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I/usr/lib/llvm-17/include" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        with:
+          path: build
+          key: linux-${{ matrix.compiler }}-${{ matrix.generator }}-build-${{ github.sha }}
+          restore-keys: linux-${{ matrix.compiler }}-${{ matrix.generator }}-build-
+      - uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: linux-${{ matrix.compiler }}-${{ matrix.generator }}-ccache-${{ github.sha }}
+          restore-keys: linux-${{ matrix.compiler }}-${{ matrix.generator }}-ccache-
+      - run: |
+          cmake -S . -B build -G "${{ matrix.generator }}" \
+            -DCMAKE_C_COMPILER=${{ env.CC }} \
+            -DCMAKE_CXX_COMPILER=${{ env.CXX }} \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      - run: cmake --build build --config Release --verbose
+      - run: ctest --test-dir build --output-on-failure
 
-      - name: Install dependencies (Ubuntu)
-        if: ${{ startsWith(matrix.os, 'ubuntu') }}
-        run: |
-          sudo apt-get install -y software-properties-common
-          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-          sudo apt-get update
-          sudo apt-get install -y cmake ninja-build gcc-12 g++-12 llvm
+  mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-13, macos-14, macos-15]
+        generator: [Ninja, "Unix Makefiles"]
+    runs-on: ${{ matrix.os }}
+    name: macOS-${{ matrix.os }}-${{ matrix.generator }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          brew install llvm libomp cmake ninja ccache
+          echo "PATH=/opt/homebrew/opt/llvm/bin:/opt/homebrew/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
+          echo "LDFLAGS=-L/opt/homebrew/opt/libomp/lib -L/opt/homebrew/opt/llvm/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I/opt/homebrew/opt/libomp/include -I/opt/homebrew/opt/llvm/include" >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=/opt/homebrew/opt/libomp;/opt/homebrew/opt/llvm" >> $GITHUB_ENV
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        with:
+          path: build
+          key: mac-${{ matrix.generator }}-build-${{ github.sha }}
+          restore-keys: mac-${{ matrix.generator }}-build-
+      - uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: mac-${{ matrix.generator }}-ccache-${{ github.sha }}
+          restore-keys: mac-${{ matrix.generator }}-ccache-
+      - run: |
+          cmake -S . -B build -G "${{ matrix.generator }}" \
+            -DCMAKE_C_COMPILER=${{ env.CC }} \
+            -DCMAKE_CXX_COMPILER=${{ env.CXX }} \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      - run: cmake --build build --config Release --verbose
+      - run: ctest --test-dir build --output-on-failure
 
-          # Set gcc and g++ version 12 as default
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 60
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 60
+  windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2019, windows-2022]
+    runs-on: ${{ matrix.os }}
+    name: Windows-${{ matrix.os }}-MSVC
+    steps:
+      - uses: actions/checkout@v4
+      - run: choco install cmake ninja ccache -y
+      - run: cmake -S . -B build -A x64
+      - run: cmake --build build --config Release --verbose
+      - run: ctest --test-dir build --output-on-failure
 
-      - name: Install dependencies (macOS)
-        if: ${{ startsWith(matrix.os, 'macos') }}
-        run: |
-          brew install llvm ninja cmake
+  windows-alt:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2019, windows-2022]
+        compiler: [mingw, llvm]
+        generator: [Ninja, "Unix Makefiles"]
+    runs-on: ${{ matrix.os }}
+    name: Windows-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.generator }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          choco install cmake ninja ccache llvm mingw -y
+          echo "CC=${{ matrix.compiler }}" >> $GITHUB_ENV
+          if [[ "${{ matrix.compiler }}" == "mingw" ]]; then
+            echo "CXX=g++" >> $GITHUB_ENV
+          else
+            echo "CXX=clang++" >> $GITHUB_ENV
+          fi
+        shell: bash
+      - run: |
+          cmake -S . -B build -G "${{ matrix.generator }}" \
+            -DCMAKE_C_COMPILER=${{ env.CC }} \
+            -DCMAKE_CXX_COMPILER=${{ env.CXX }} \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        shell: bash
+      - run: cmake --build build --config Release --verbose
+      - run: ctest --test-dir build --output-on-failure
 
-      - name: Install dependencies (Windows)
-        if: ${{ startsWith(matrix.os, 'windows') }}
-        run: |
-          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-          choco install mingw llvm ninja -y
-
-      - name: Configure CMake
-        if: ${{ matrix.cxx_compiler == 'cl' }}
-        run: |
-          cmake -S . -B build -A x64 -DCMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }} -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-
-      - name: Configure CMake
-        if: ${{ matrix.cxx_compiler != 'cl' }}
-        run: |
-          cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_CXX_COMPILER=${{ matrix.cxx_compiler }} -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-
-      - name: Build Project
-        id: build_project
-        continue-on-error: true
-        run: |
-          cmake --build build --config Release > compile.log 2>&1
-
-      - name: Run tests
-        if: ${{ steps.build_project.outcome == 'success' }}
-        run: |
-          ctest -C Release --test-dir build/tests
