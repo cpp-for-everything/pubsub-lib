@@ -129,14 +129,14 @@ jobs:
             choco install mingw --version=12.2.0 -y
             echo "CC=gcc" >> $GITHUB_ENV
             echo "CXX=g++" >> $GITHUB_ENV
-            echo "PATH=/c/mingw64/bin:$PATH" >> $GITHUB_ENV
+            echo "C:/mingw64/bin" >> $GITHUB_PATH
             if [[ "${{ matrix.generator }}" == "Unix Makefiles" ]]; then
               echo "CMAKE_MAKE_PROGRAM=C:/mingw64/bin/mingw32-make.exe" >> $GITHUB_ENV
             fi
           elif [[ "${{ matrix.compiler }}" == "clang" ]]; then
             echo "CC=clang" >> $GITHUB_ENV
             echo "CXX=clang++" >> $GITHUB_ENV
-            echo "PATH=/c/Program Files/LLVM/bin:$PATH" >> $GITHUB_ENV
+            echo "C:/Program Files/LLVM/bin" >> $GITHUB_PATH
           elif [[ "${{ matrix.compiler }}" == "msvc" ]]; then
             echo "USE_MSVC=true" >> $GITHUB_ENV
           fi
