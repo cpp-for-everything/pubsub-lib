@@ -14,10 +14,10 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
   GIT_TAG v3.5.2
 )
+
 FetchContent_MakeAvailable(Catch2)
 
-# Enable OpenMP
-find_package(OpenMP REQUIRED)
+find_package(TBB CONFIG REQUIRED)
 
 # Create target for the library (header-only)
 add_library(pubsub INTERFACE)
@@ -28,10 +28,8 @@ target_include_directories(pubsub INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
-if(OpenMP_CXX_FOUND)
-    add_definitions(-DWITH_OMP)
-    target_link_libraries(pubsub INTERFACE OpenMP::OpenMP_CXX)
-endif()
+target_compile_definitions(pubsub INTERFACE -DWITH_TBB)
+target_link_libraries(pubsub INTERFACE TBB::tbb)
 
 # Install the headers
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

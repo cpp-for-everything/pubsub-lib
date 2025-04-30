@@ -1,163 +1,124 @@
-name: CI
+name: Verify Parallelization Libraries for C++
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
 
   linux:
-    name: Linux ${{ matrix.os }} - ${{ matrix.compiler }} - ${{ matrix.generator }} - ${{ matrix.build_type }}
-    runs-on: ${{ matrix.os }}
+    name: Linux Verification
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-24.04]
-        compiler: [gcc, clang]
-        generator: [Ninja, "Unix Makefiles"]
-        build_type: [Debug, Release]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup compiler and tools
-        run: |
-          sudo apt update
-          sudo apt install -y cmake ninja-build ccache ${{ matrix.compiler }} g++
-          if [[ "${{ matrix.compiler }}" == "gcc" ]]; then
-            echo "CC=gcc" >> $GITHUB_ENV
-            echo "CXX=g++" >> $GITHUB_ENV
-          elif [[ "${{ matrix.compiler }}" == "clang" ]]; then
-            echo "CC=clang" >> $GITHUB_ENV
-            echo "CXX=clang++" >> $GITHUB_ENV
-          fi
-
-      - name: Build OpenMP from source
-        run: |
-          git clone --depth 1 https://github.com/llvm/llvm-project.git
-          cd llvm-project/openmp
-          mkdir build && cd build
-          cmake .. -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/openmp-install
-          cmake --build . --target install -j$(nproc)
-
-      - name: Configure CMake
-        run: |
-          cmake -S . -B build -G "${{ matrix.generator }}" \
-            -DCMAKE_C_COMPILER=${{ env.CC }} \
-            -DCMAKE_CXX_COMPILER=${{ env.CXX }} \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/openmp-install \
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-
-      - name: Build
-        run: cmake --build build --verbose
-
-      - name: Test
-        run: |
-          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/openmp-install/lib:$LD_LIBRARY_PATH
-          ctest --test-dir build --output-on-failure
-
-  macos:
-    name: macOS ${{ matrix.os }} - ${{ matrix.generator }} - ${{ matrix.build_type }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-13, macos-14]
-        generator: [Ninja, "Unix Makefiles"]
-        build_type: [Debug, Release]
+        compiler: [g++, clang++]
+        generator: [Unix Makefiles, Ninja]
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
-          brew install cmake ninja ccache llvm
-          echo "CC=clang" >> $GITHUB_ENV
-          echo "CXX=clang++" >> $GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=$(brew --prefix llvm)" >> $GITHUB_ENV
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++ clang libtbb-dev
 
-      - name: Build OpenMP
-        run: |
-          git clone --depth 1 https://github.com/llvm/llvm-project.git
-          cd llvm-project/openmp
-          mkdir build && cd build
-          cmake .. -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/openmp-install
-          cmake --build . --target install -j$(sysctl -n hw.logicalcpu)
-
-      - name: Configure
-        run: |
-          cmake -S . -B build -G "${{ matrix.generator }}" \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DCMAKE_PREFIX_PATH="$GITHUB_WORKSPACE/openmp-install;$CMAKE_PREFIX_PATH" \
-            -DCMAKE_C_COMPILER=${{ env.CC }} \
-            -DCMAKE_CXX_COMPILER=${{ env.CXX }} \
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-
-      - name: Build
-        run: cmake --build build --verbose
-
-      - name: Test
-        run: |
-          export DYLD_LIBRARY_PATH=$GITHUB_WORKSPACE/openmp-install/lib:$DYLD_LIBRARY_PATH
-          ctest --test-dir build --output-on-failure
-
-  windows:
-    name: Windows ${{ matrix.os }} - ${{ matrix.compiler }} - ${{ matrix.generator }} - ${{ matrix.build_type }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-2019, windows-2022]
-        compiler: [msvc, clang, mingw]
-        generator: [Ninja, "Unix Makefiles"]
-        build_type: [Debug, Release]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install dependencies
+      - name: Set compiler path
+        run: echo "CXX=${{ matrix.compiler }}" >> $GITHUB_ENV
         shell: bash
-        run: |
-          choco install cmake ninja ccache llvm -y
-
-          if [[ "${{ matrix.compiler }}" == "mingw" ]]; then
-            choco install mingw --version=12.2.0 -y
-            echo "CC=gcc" >> $GITHUB_ENV
-            echo "CXX=g++" >> $GITHUB_ENV
-            echo "C:/mingw64/bin" >> $GITHUB_PATH
-            if [[ "${{ matrix.generator }}" == "Unix Makefiles" ]]; then
-              echo "CMAKE_MAKE_PROGRAM=C:/mingw64/bin/mingw32-make.exe" >> $GITHUB_ENV
-            fi
-          elif [[ "${{ matrix.compiler }}" == "clang" ]]; then
-            echo "CC=clang" >> $GITHUB_ENV
-            echo "CXX=clang++" >> $GITHUB_ENV
-            echo "C:/Program Files/LLVM/bin" >> $GITHUB_PATH
-          elif [[ "${{ matrix.compiler }}" == "msvc" ]]; then
-            echo "USE_MSVC=true" >> $GITHUB_ENV
-          fi
 
       - name: Configure CMake
+        run: >
+          cmake -S . -B build 
+          -G "${{ matrix.generator }}" 
+          -DCMAKE_CXX_COMPILER=${{ env.CXX }}
         shell: bash
-        run: |
-          CONFIGURE_CMD="cmake -S . -B build -G \"${{ matrix.generator }}\""
-          CONFIGURE_CMD+=" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}"
-          if [[ "${{ env.USE_MSVC }}" != "true" ]]; then
-            CONFIGURE_CMD+=" -DCMAKE_C_COMPILER=${{ env.CC }} -DCMAKE_CXX_COMPILER=${{ env.CXX }}"
-            CONFIGURE_CMD+=" -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
-            if [[ -n "${{ env.CMAKE_MAKE_PROGRAM }}" ]]; then
-              CONFIGURE_CMD+=" -DCMAKE_MAKE_PROGRAM=${{ env.CMAKE_MAKE_PROGRAM }}"
-            fi
-          fi
-          echo "Running: $CONFIGURE_CMD"
-          eval $CONFIGURE_CMD
 
       - name: Build
-        run: cmake --build build --config ${{ matrix.build_type }} --verbose
+        run: cmake --build build --config Release
 
       - name: Run tests
-        run: ctest --test-dir build --output-on-failure --build-config ${{ matrix.build_type }}
+        run: ctest --test-dir build --output-on-failure --build-config Release
+
+  windows:
+    name: Windows Verification
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [cl]
+        generator: ["Visual Studio 17 2022"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: choco install cmake ninja -y
+
+      - name: Install oneTBB via vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg
+          ./vcpkg/bootstrap-vcpkg.bat
+          ./vcpkg/vcpkg install tbb:x64-windows
+          echo "CMAKE_TOOLCHAIN_FILE=$PWD/vcpkg/scripts/buildsystems/vcpkg.cmake" >> $env:GITHUB_ENV
+        shell: pwsh
+
+      - name: Debug vcpkg TBB install (optional)
+        run: |
+          dir vcpkg/installed/x64-windows/share/tbb
+          dir vcpkg/installed/x64-windows/lib
+        shell: pwsh
+
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure CMake
+        run: >
+            cmake -S . -B build 
+            -G "${{ matrix.generator }}" 
+            -DCMAKE_CXX_COMPILER="${{ matrix.compiler }}"
+            -DCMAKE_TOOLCHAIN_FILE="${{ env.CMAKE_TOOLCHAIN_FILE }}"
+        shell: bash
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure --build-config Release
+  macos:
+    name: macOS Verification
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [clang++, g++-13]
+        generator: [Unix Makefiles, Ninja]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: brew install cmake ninja tbb
+
+      - name: Install GCC
+        if: matrix.compiler == 'g++-13'
+        run: brew install gcc
+
+      - name: Set compiler path
+        run: echo "CXX=${{ matrix.compiler }}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Configure CMake
+        run: >
+          cmake -S . -B build 
+          -G "${{ matrix.generator }}" 
+          -DCMAKE_CXX_COMPILER=${{ env.CXX }}
+        shell: bash
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure --build-config Release

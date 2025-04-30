@@ -9,9 +9,15 @@
 #include <typeindex>
 #include <iostream>
 #include <future>
+#include <execution>
+#include <algorithm>
 
 #ifdef WITH_OMP
     #include <omp.h>
+#endif
+
+#ifdef WITH_TBB
+    #include <tbb/parallel_for_each.h>
 #endif
 
 #include "unique_couter.h"
@@ -110,8 +116,8 @@ namespace pubsub {
     template<auto Event>
     class EventHandler : public IEventHandler {
         using function_type = std::function<typename decltype(Event)::func_t>;
-        std::list<function_type> callbacks;
-        std::unordered_map<void*, typename std::list<function_type>::iterator> ptrs;
+        std::vector<function_type> callbacks;
+        std::unordered_map<void*, typename std::vector<function_type>::iterator> ptrs;
 
     public:
         /**
@@ -161,7 +167,7 @@ namespace pubsub {
          * a queue and calls them when a thread in the pool is free
          */
         template<typename... Args>
-        void emit_async(Args... args) {
+        void emit_thread_async(Args... args) {
             for (const auto& cb : callbacks) {
                 (void)std::async(std::launch::async, cb, args...);
             }
@@ -177,6 +183,32 @@ namespace pubsub {
             for (const auto& cb : callbacks) {
                 cb(args...);
             }
+        }
+#endif
+
+#ifdef WITH_TBB
+        /**
+         * @brief Emit an event asynchronously using oneTBB.
+         */
+        template<typename... Args>
+        void emit_tbb_async(Args... args) {
+            tbb::parallel_for_each(callbacks.begin(), callbacks.end(), [&](const auto& cb) {
+                cb(args...);
+            });
+        }
+#endif
+
+#if defined(__cpp_lib_execution)
+        /**
+         * @brief Emit an event asynchronously using <execution>.
+         */
+        template<typename ExecutionPolicy, typename... Args, typename = std::is_execution_policy<ExecutionPolicy>>
+        void emit_async(ExecutionPolicy policy, Args... args) {
+            std::for_each(policy, callbacks.begin(), callbacks.end(),
+                [&](const auto& cb) {
+                    cb(args...);
+                }
+            );
         }
 #endif
     };
@@ -234,8 +266,8 @@ namespace pubsub {
          * @brief Emit an event asynchronously to all listeners.
          */
         template<auto Event, typename... Args> requires IsEvent<decltype(Event)>
-        void emit_async(Args... args) {
-            get_handler<Event>()->emit_async(args...);
+        void emit_thread_async(Args... args) {
+            get_handler<Event>()->emit_thread_async(args...);
         }
 
 #ifdef WITH_OMP
@@ -245,6 +277,26 @@ namespace pubsub {
         template<auto Event, typename... Args> requires IsEvent<decltype(Event)>
         void emit_omp_async(Args... args) {
             get_handler<Event>()->emit_omp_async(args...);
+        }
+#endif
+
+#ifdef WITH_TBB
+        /**
+         * @brief Emit an event asynchronously using oneTBB to all listeners.
+         */
+        template<auto Event, typename... Args> requires IsEvent<decltype(Event)>
+        void emit_tbb_async(Args... args) {
+            get_handler<Event>()->emit_tbb_async(args...);
+        }
+#endif
+
+#if defined(__cpp_lib_execution)
+        /**
+         * @brief Emit an event asynchronously to all listeners.
+         */
+        template<auto Event, typename... Args> requires IsEvent<decltype(Event)>
+        void emit_async(Args... args) {
+            get_handler<Event>()->emit_async(args...);
         }
 #endif
 
