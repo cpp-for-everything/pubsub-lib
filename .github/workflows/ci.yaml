@@ -152,8 +152,6 @@ jobs:
             if [[ -n "${{ env.CMAKE_MAKE_PROGRAM }}" ]]; then
               CONFIGURE_CMD+=" -DCMAKE_MAKE_PROGRAM=${{ env.CMAKE_MAKE_PROGRAM }}"
             fi
-          else
-            CONFIGURE_CMD+=" -A x64"
           fi
           echo "Running: $CONFIGURE_CMD"
           eval $CONFIGURE_CMD
