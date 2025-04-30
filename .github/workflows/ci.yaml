@@ -107,64 +107,6 @@ jobs:
           ctest --test-dir build --output-on-failure
 
   windows:
-    name: Windows ${{ matrix.os }} - ${{ matrix.compiler }} - ${{ matrix.generator }} - ${{ matrix.build_type }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-2019, windows-2022]
-        compiler: [msvc, clang, mingw]
-        generator: [Ninja, "Unix Makefiles"]
-        build_type: [Debug, Release]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install dependencies
-        shell: bash
-        run: |
-          choco install cmake ninja ccache llvm -y
-          echo "PATH=/c/ProgramData/chocolatey/bin:$PATH" >> $GITHUB_ENV
-
-          if [[ "${{ matrix.compiler }}" == "mingw" ]]; then
-            choco install mingw --version=12.2.0 -y
-            echo "CC=gcc" >> $GITHUB_ENV
-            echo "CXX=g++" >> $GITHUB_ENV
-            echo "PATH=C:/mingw64/bin:$PATH" >> $GITHUB_ENV
-
-            if [[ "${{ matrix.generator }}" == "Unix Makefiles" ]]; then
-              echo "CMAKE_MAKE_PROGRAM=C:/mingw64/bin/mingw32-make.exe" >> $GITHUB_ENV
-            fi
-
-          elif [[ "${{ matrix.compiler }}" == "clang" ]]; then
-            echo "CC=clang" >> $GITHUB_ENV
-            echo "CXX=clang++" >> $GITHUB_ENV
-            echo "PATH=C:/Program Files/LLVM/bin:$PATH" >> $GITHUB_ENV
-
-          elif [[ "${{ matrix.compiler }}" == "msvc" ]]; then
-            # Let CMake use VS environment by default, don't set CC/CXX
-            echo "USE_MSVC=true" >> $GITHUB_ENV
-          fi
-
-      - name: Configure CMake
-        shell: bash
-        run: |
-          CONFIGURE_CMD="cmake -S . -B build -G \"${{ matrix.generator }}\""
-          CONFIGURE_CMD+=" -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}"
-          if [[ "${{ env.USE_MSVC }}" != "true" ]]; then
-            CONFIGURE_CMD+=" -DCMAKE_C_COMPILER=${{ env.CC }} -DCMAKE_CXX_COMPILER=${{ env.CXX }}"
-            CONFIGURE_CMD+=" -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
-            if [[ -n "${{ env.CMAKE_MAKE_PROGRAM }}" ]]; then
-              CONFIGURE_CMD+=" -DCMAKE_MAKE_PROGRAM=${{ env.CMAKE_MAKE_PROGRAM }}"
-            fi
-          fi
-          eval $CONFIGURE_CMD
-
-      - name: Build
-        run: cmake --build build --config ${{ matrix.build_type }} --verbose
-
-      - name: Test
-        run: ctest --test-dir build --build-config ${{ matrix.build_type }} --output-on-failure
       name: Windows ${{ matrix.os }} - ${{ matrix.compiler }} - ${{ matrix.generator }} - ${{ matrix.build_type }}
       runs-on: ${{ matrix.os }}
       strategy:
@@ -182,6 +124,8 @@ jobs:
           shell: bash
           run: |
             choco install cmake ninja ccache llvm -y
+            echo "PATH=/c/ProgramData/chocolatey/bin:$PATH" >> $GITHUB_ENV
+            
             if [[ "${{ matrix.compiler }}" == "mingw" ]]; then
               choco install mingw --version=12.2.0 -y
               echo "CC=gcc" >> $GITHUB_ENV
