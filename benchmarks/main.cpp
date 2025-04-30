@@ -1,95 +1,82 @@
 #include <benchmark/benchmark.h>
-#include <iostream>
 #include <functional>
+#include <memory>
 #include <vector>
+#include <unordered_map>
+#include <cstdint>
 
-// ========== pubsub-lib ==========
-#include "pubsub.h" // path to your pubsub-lib header
-
-// ======= Benchmark Setup =======
-
-// Simple event struct
-constexpr auto MyEvent = pubsub::Event<void(int)>();
-
-// Global for pubsub-lib
-pubsub::Publisher pub;
-auto token = pub.subscribe<MyEvent>([](int data) {
-    int dummy = data;
-    benchmark::DoNotOptimize(dummy);
-});
-
-// ================= pubsub-lib Benchmark =================
-static void BM_PubSubLib(benchmark::State& state) {
-    for (auto _ : state) {
-        pub.emit<MyEvent>(42);
-    }
-}
-BENCHMARK(BM_PubSubLib);
-
-// =============== pubsub-lib async Benchmark ==============
-static void BM_PubSubLib_ASYNC(benchmark::State& state) {
-    for (auto _ : state) {
-        pub.emit_async<MyEvent>(42);
-    }
-}
-BENCHMARK(BM_PubSubLib_ASYNC);
+#include "pubsub.h"
 
 #ifdef WITH_OMP
-// =============== pubsub-lib async using OpenMP Benchmark ==============
-static void BM_PubSubLib_OMP_ASYNC(benchmark::State& state) {
-    omp_set_num_threads(state.range(0));  // Set the number of OpenMP threads dynamically
-    for (auto _ : state) {
-        pub.emit_omp_async<MyEvent>(42);
-    }
+#include <omp.h>
+#endif
+
+// ========== Event Definition ==========
+constexpr auto MyEvent = pubsub::Event<void(int)>();
+
+// ========== Simulated Heavy Work ==========
+void heavy_callback_workload(int x) {
+    volatile uint64_t sum = x;
+    for (int i = 1; i <= 1000; ++i)
+        sum += i * i;
+    benchmark::DoNotOptimize(sum);
 }
-// Pass the thread count as a "range" argument to the benchmark
-BENCHMARK(BM_PubSubLib_OMP_ASYNC)->Arg(1)->Arg(2)->Arg(4)->Arg(8)->Arg(16);
-#endif
 
-// ================= Boost.Signals2 Benchmark =================
-#ifdef USE_BOOST
-#include <boost/signals2.hpp>
-
-static void BM_BoostSignals2(benchmark::State& state) {
-    boost::signals2::signal<void(int)> signal;
-    signal.connect([](int data) {
-        int dummy = data;
-        benchmark::DoNotOptimize(dummy);
-    });
-
-    for (auto _ : state) {
-        signal(42);
+// ========== Create Publisher with N Heavy Subscribers ==========
+std::unique_ptr<pubsub::Publisher> create_publisher_with_heavy_subs(int num_subs) {
+    auto pub = std::make_unique<pubsub::Publisher>();
+    for (int i = 0; i < num_subs; ++i) {
+        pub->subscribe<MyEvent>([](int x) {
+            heavy_callback_workload(x);
+        });
     }
+    return pub;
 }
-BENCHMARK(BM_BoostSignals2);
+
+// ========== Global Unordered Map of Prebuilt Publishers ==========
+std::vector<int> subscriber_counts = {1, 10, 100, 500, 1000};
+std::unordered_map<int, std::unique_ptr<pubsub::Publisher>> heavy_publishers;
+
+// ========== Benchmark Macro ==========
+#define DEFINE_HEAVY_EMIT_BENCH(name, emit_method)                            \
+    static void name(benchmark::State& state) {                               \
+        int subs = state.range(0);                                            \
+        auto it = heavy_publishers.find(subs);                                \
+        if (it == heavy_publishers.end()) state.SkipWithError("Missing pub"); \
+        auto& pub = it->second;                                               \
+        for (auto _ : state) {                                                \
+            pub->emit_method;                                    \
+        }                                                                     \
+    }                                                                         \
+    BENCHMARK(name)->Args({1})->Args({10})->Args({100})->Args({500})->Args({1000});
+
+// ========== Emit Variants ==========
+DEFINE_HEAVY_EMIT_BENCH(BM_PubSub_Emit_Sync, emit<MyEvent>(42))
+
+DEFINE_HEAVY_EMIT_BENCH(BM_PubSub_Emit_StdAsync, emit_thread_async<MyEvent>(42))
+
+#if defined(__cpp_lib_execution)
+DEFINE_HEAVY_EMIT_BENCH(BM_PubSub_Emit_StdExec_seq, emit_async<MyEvent>(std::execution::seq, 42))
+DEFINE_HEAVY_EMIT_BENCH(BM_PubSub_Emit_StdExec_par, emit_async<MyEvent>(std::execution::par, 42))
+DEFINE_HEAVY_EMIT_BENCH(BM_PubSub_Emit_StdExec_par_unseq, emit_async<MyEvent>(std::execution::par_unseq, 42))
+DEFINE_HEAVY_EMIT_BENCH(BM_PubSub_Emit_StdExec_unseq, emit_async<MyEvent>(std::execution::unseq, 42))
 #endif
 
-// ================= Qt Signals Benchmark =================
-#ifdef USE_QT
-#include <QObject>
+#ifdef WITH_OMP
+DEFINE_HEAVY_EMIT_BENCH(BM_PubSub_Emit_OpenMP, emit_omp_async<MyEvent>(42))
+#endif
 
-class QtEmitter : public QObject {
-    Q_OBJECT
-signals:
-    void mySignal(int);
-};
+#ifdef WITH_TBB
+DEFINE_HEAVY_EMIT_BENCH(BM_PubSub_Emit_TBB, emit_tbb_async<MyEvent>(42))
+#endif
 
-static void BM_QtSignals(benchmark::State& state) {
-    QtEmitter emitter;
-    QObject::connect(&emitter, &QtEmitter::mySignal, [](int val) {
-        int dummy = val;
-        benchmark::DoNotOptimize(dummy);
-    });
-
-    for (auto _ : state) {
-        emit emitter.mySignal(42);
+// ========== Manual Main ==========
+int main(int argc, char** argv) {
+    for (int count : subscriber_counts) {
+        heavy_publishers[count] = create_publisher_with_heavy_subs(count);
     }
+
+    benchmark::Initialize(&argc, argv);
+    benchmark::RunSpecifiedBenchmarks();
+    return 0;
 }
-BENCHMARK(BM_QtSignals);
-#endif
-
-BENCHMARK_MAIN();
-
-#ifdef USE_QT
-#include "main.moc"
-#endif

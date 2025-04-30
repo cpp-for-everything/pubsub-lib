@@ -93,7 +93,7 @@ TEST_CASE("Async event delivery still invokes subscribers") {
     TestSubscriber sub;
 
     sub.subscribe_to(pub);
-    pub.emit_async<TestEvents::Data>(99);
+    pub.emit_thread_async<TestEvents::Data>(99);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     REQUIRE(sub.data_sum == 99);
 }
