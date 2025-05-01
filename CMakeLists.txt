@@ -14,7 +14,10 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
   GIT_TAG v3.5.2
 )
+
 FetchContent_MakeAvailable(Catch2)
+
+find_package(TBB CONFIG REQUIRED)
 
 # Create target for the library (header-only)
 add_library(pubsub INTERFACE)
@@ -24,6 +27,9 @@ target_include_directories(pubsub INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+
+target_compile_definitions(pubsub INTERFACE -DWITH_TBB)
+target_link_libraries(pubsub INTERFACE TBB::tbb)
 
 # Install the headers
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
