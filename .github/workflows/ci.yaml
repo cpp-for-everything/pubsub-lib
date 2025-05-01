@@ -42,6 +42,10 @@ jobs:
       - name: Run tests
         run: ctest --test-dir build --output-on-failure --build-config Release
 
+      - name: Run benchmarks
+        run: >
+          ./build/benchmarks/benchmark_pubsub --benchmark_counters_tabular=true
+
   windows:
     name: Windows Verification
     runs-on: windows-latest
@@ -87,6 +91,10 @@ jobs:
 
       - name: Run tests
         run: ctest --test-dir build --output-on-failure --build-config Release
+
+      - name: Run benchmarks
+        run: >
+          ./build/benchmarks/Release/benchmark_pubsub.exe --benchmark_counters_tabular=true
   macos:
     name: macOS Verification
     runs-on: macos-latest
@@ -122,3 +130,7 @@ jobs:
 
       - name: Run tests
         run: ctest --test-dir build --output-on-failure --build-config Release
+      
+      - name: Run benchmarks
+        run: >
+          ./build/benchmarks/benchmark_pubsub --benchmark_counters_tabular=true
