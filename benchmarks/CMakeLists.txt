@@ -38,9 +38,10 @@ if(ENABLE_BM)
     )
 
     # Linking
-    target_link_libraries(benchmark_pubsub
+    target_link_libraries(benchmark_pubsub PUBLIC
         benchmark::benchmark
         benchmark::benchmark_main
+        pubsub
     )
 
     if(ENABLE_BOOST)
