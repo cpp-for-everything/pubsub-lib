@@ -34,6 +34,7 @@ jobs:
           cmake -S . -B build 
           -G "${{ matrix.generator }}" 
           -DCMAKE_CXX_COMPILER=${{ env.CXX }}
+          -DENABLE_BM=ON
         shell: bash
 
       - name: Build
@@ -84,6 +85,7 @@ jobs:
             -G "${{ matrix.generator }}" 
             -DCMAKE_CXX_COMPILER="${{ matrix.compiler }}"
             -DCMAKE_TOOLCHAIN_FILE="${{ env.CMAKE_TOOLCHAIN_FILE }}"
+            -DENABLE_BM=ON
         shell: bash
 
       - name: Build
@@ -123,6 +125,7 @@ jobs:
           cmake -S . -B build 
           -G "${{ matrix.generator }}" 
           -DCMAKE_CXX_COMPILER=${{ env.CXX }}
+          -DENABLE_BM=ON
         shell: bash
 
       - name: Build
