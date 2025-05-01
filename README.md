@@ -106,6 +106,32 @@ ctest --test-dir build
 
 ---
 
+## 📊 Benchmark
+
+Benchmark results using [Google Benchmark](https://github.com/google/benchmark) on a 12-core CPU measuring `emit()` performance across strategies and subscriber counts.
+
+### 🔬 Emit Time (lower is better, log scale)
+
+![PubSub Benchmark Chart](./docs/pubsub_benchmark_chart.png)
+
+| Strategy                  | 1 sub | 10 subs | 100 subs | 500 subs | 1000 subs |
+|---------------------------|-------|---------|----------|----------|-----------|
+| **Sync**                  | 1.1 µs | 10 µs   | 99 µs    | 534 µs   | 954 µs    |
+| `std::async`              | 74 µs  | 682 µs  | 7.2 ms   | 42.5 ms  | 109 ms    |
+| `std::execution::seq`     | 1.3 µs | 12.6 µs | 130 µs   | 721 µs   | 1.03 ms   |
+| `std::execution::par`     | 1.3 µs | 14.1 µs | 186 µs   | 772 µs   | 1.65 ms   |
+| `std::execution::unseq`   | 1.6 µs | 14.4 µs | 158 µs   | 803 µs   | 1.50 ms   |
+| `std::execution::par_unseq` | 1.5 µs | 12 µs | 149 µs   | 837 µs   | 1.73 ms   |
+| **oneTBB**                | 1.9 µs | 10.2 µs | 84 µs    | 262 µs   | 618 µs    |
+
+### ✅ Summary
+
+- ⚡ Use **sync emit** for low subscriber counts
+- 🔁 Use **oneTBB or `par_unseq`** for better performance at scale
+- 🛑 Avoid `std::async` for high fanout – it incurs major overhead
+
+---
+
 ## 📖 Citation
 
 If you use `pubsub-lib` in your research or scientific work, please cite it as:
