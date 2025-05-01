@@ -116,8 +116,8 @@ namespace pubsub {
     template<auto Event>
     class EventHandler : public IEventHandler {
         using function_type = std::function<typename decltype(Event)::func_t>;
-        std::vector<function_type> callbacks;
-        std::unordered_map<void*, typename std::vector<function_type>::iterator> ptrs;
+        std::list<function_type> callbacks;
+        std::unordered_map<void*, typename std::list<function_type>::iterator> ptrs;
 
     public:
         /**
