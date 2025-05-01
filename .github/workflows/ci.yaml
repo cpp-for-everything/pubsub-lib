@@ -34,6 +34,7 @@ jobs:
           cmake -S . -B build 
           -G "${{ matrix.generator }}" 
           -DCMAKE_CXX_COMPILER=${{ env.CXX }}
+          -DENABLE_BM=ON
         shell: bash
 
       - name: Build
@@ -41,6 +42,10 @@ jobs:
 
       - name: Run tests
         run: ctest --test-dir build --output-on-failure --build-config Release
+
+      - name: Run benchmarks
+        run: >
+          ./build/benchmarks/benchmark_pubsub --benchmark_counters_tabular=true
 
   windows:
     name: Windows Verification
@@ -80,6 +85,7 @@ jobs:
             -G "${{ matrix.generator }}" 
             -DCMAKE_CXX_COMPILER="${{ matrix.compiler }}"
             -DCMAKE_TOOLCHAIN_FILE="${{ env.CMAKE_TOOLCHAIN_FILE }}"
+            -DENABLE_BM=ON
         shell: bash
 
       - name: Build
@@ -87,6 +93,10 @@ jobs:
 
       - name: Run tests
         run: ctest --test-dir build --output-on-failure --build-config Release
+
+      - name: Run benchmarks
+        run: >
+          ./build/benchmarks/Release/benchmark_pubsub.exe --benchmark_counters_tabular=true
   macos:
     name: macOS Verification
     runs-on: macos-latest
@@ -115,6 +125,7 @@ jobs:
           cmake -S . -B build 
           -G "${{ matrix.generator }}" 
           -DCMAKE_CXX_COMPILER=${{ env.CXX }}
+          -DENABLE_BM=ON
         shell: bash
 
       - name: Build
@@ -122,3 +133,7 @@ jobs:
 
       - name: Run tests
         run: ctest --test-dir build --output-on-failure --build-config Release
+      
+      - name: Run benchmarks
+        run: >
+          ./build/benchmarks/benchmark_pubsub --benchmark_counters_tabular=true
