@@ -17,7 +17,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2)
 
-find_package(TBB CONFIG REQUIRED)
+find_package(TBB CONFIG)
 
 # Create target for the library (header-only)
 add_library(pubsub INTERFACE)
@@ -28,8 +28,10 @@ target_include_directories(pubsub INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
-target_compile_definitions(pubsub INTERFACE -DWITH_TBB)
-target_link_libraries(pubsub INTERFACE TBB::tbb)
+if (TBB_FOUND)
+  target_compile_definitions(pubsub INTERFACE -DWITH_TBB)
+  target_link_libraries(pubsub INTERFACE TBB::tbb)
+endif()
 
 # Install the headers
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
