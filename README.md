@@ -1,4 +1,4 @@
-# 📦 pubsub-lib
+# 🏦 pubsub-lib
 
 > A lightweight, header-only C++20 Publish-Subscribe library with type-safe events, RAII-based unsubscription, and async support.
 
@@ -17,51 +17,20 @@
 - ✅ Support for multiple publishers and event types
 - ✅ RAII-based unsubscription via `SubscriptionToken`
 - ✅ Subscriber lifetime management
-- ✅ Async dispatching with `emit_async`
+- ✅ Async dispatching via `std::async`, `std::execution`, or oneTBB (if found)
 - ✅ Header-only, C++20
 
 ---
 
 ## ✅ Compatibility
 
-| OS           | Compiler | Generator             | Status |
-|--------------|----------|------------------------|--------|
-| macOS 13     | Clang    | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-13-clang-ninja) |
-| macOS 13     | Clang    | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-13-clang-make) |
-| macOS 13     | GCC      | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-13-gcc-ninja) |
-| macOS 13     | GCC      | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-13-gcc-make) |
-| macOS 14     | Clang    | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-14-clang-ninja) |
-| macOS 14     | Clang    | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-14-clang-make) |
-| macOS 14     | GCC      | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-14-gcc-ninja) |
-| macOS 14     | GCC      | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-14-gcc-make) |
-| macOS 15     | Clang    | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-15-clang-ninja) |
-| macOS 15     | Clang    | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-15-clang-make) |
-| macOS 15     | GCC      | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-15-gcc-ninja) |
-| macOS 15     | GCC      | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos-15-gcc-make) |
-| Ubuntu 22.04 | Clang    | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-22.04-clang-ninja) |
-| Ubuntu 22.04 | Clang    | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-22.04-clang-make) |
-| Ubuntu 22.04 | GCC      | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-22.04-gcc-ninja) |
-| Ubuntu 22.04 | GCC      | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-22.04-gcc-make) |
-| Ubuntu 24.04 | Clang    | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-24.04-clang-ninja) |
-| Ubuntu 24.04 | Clang    | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-24.04-clang-make) |
-| Ubuntu 24.04 | GCC      | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-24.04-gcc-ninja) |
-| Ubuntu 24.04 | GCC      | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu-24.04-gcc-make) |
-| Windows 2019 | Clang    | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2019-clang-ninja) |
-| Windows 2019 | Clang    | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2019-clang-make) |
-| Windows 2019 | GCC      | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2019-gcc-ninja) |
-| Windows 2019 | GCC      | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2019-gcc-make) |
-| Windows 2019 | MSVC     | Visual Studio 17 2022  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2019-msvc-vs2022) |
-| Windows 2022 | Clang    | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2022-clang-ninja) |
-| Windows 2022 | Clang    | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2022-clang-make) |
-| Windows 2022 | GCC      | Ninja                  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2022-gcc-ninja) |
-| Windows 2022 | GCC      | Unix Makefiles         | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2022-gcc-make) |
-| Windows 2022 | MSVC     | Visual Studio 17 2022  | ![Build](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows-2022-msvc-vs2022) |
+| OS       | Compiler     | Generator         | Status |
+|----------|--------------|-------------------|--------|
+| Ubuntu   | g++, clang++ | Makefiles, Ninja  | [![Ubuntu](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=ubuntu)](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml) |
+| Windows  | MSVC         | Visual Studio 17  | [![Windows](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=windows)](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml) |
+| macOS    | clang++, g++ | Makefiles, Ninja  | [![macOS](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml/badge.svg?branch=main&label=macos)](https://github.com/cpp-for-everything/pubsub-lib/actions/workflows/ci.yaml) |
 
-| C++ Standard |
-|---------------|
-| ✅ C++20 |
-
-(✔ Verified in CI using GitHub Actions)
+> 🧪 All environments verified via GitHub Actions.
 
 ---
 
@@ -69,12 +38,12 @@
 
 ### CMake Project Integration
 
-**1. Clone or Fetch:**
 ```bash
 git clone https://github.com/cpp-for-everything/pubsub-lib.git
 ```
 
-**2. Add to your `CMakeLists.txt`:**
+In your `CMakeLists.txt`:
+
 ```cmake
 add_subdirectory(pubsub-lib)
 
@@ -82,12 +51,14 @@ target_link_libraries(my_app PRIVATE pubsub::pubsub)
 ```
 
 ### Or Install System-Wide
+
 ```bash
 cmake -B build -S pubsub-lib -DCMAKE_INSTALL_PREFIX=/usr/local
 cmake --build build --target install
 ```
 
 Then:
+
 ```cmake
 find_package(pubsub REQUIRED)
 target_link_libraries(my_app PRIVATE pubsub::pubsub)
@@ -95,59 +66,154 @@ target_link_libraries(my_app PRIVATE pubsub::pubsub)
 
 ---
 
-## 🧪 Testing
+## 📃 Usage
 
-Build and run the test suite:
+### 1. Define Events
+
+```cpp
+constexpr auto MyEvent = pubsub::Event<void(int)>();
+```
+
+Or organize events:
+
+```cpp
+struct MyEvents {
+    static constexpr auto Ping = pubsub::Event<void()>();
+    static constexpr auto Data = pubsub::Event<void(int)>();
+};
+```
+
+### 2. Create a Publisher
+
+```cpp
+pubsub::Publisher pub;
+```
+
+### 3. Subscribe
+
+#### a) Lambda or free function
+
+```cpp
+pub.subscribe<MyEvents::Ping>([] { std::cout << "Ping!\n"; });
+```
+
+#### b) Member function
+
+```cpp
+struct Listener {
+    void on_data(int x) { std::cout << "Got " << x << "\n"; }
+} obj;
+
+pub.subscribe<MyEvents::Data>(&obj, &Listener::on_data);
+```
+
+#### c) Lifetime-aware Subscriber class
+
+```cpp
+class MySubscriber : public pubsub::Subscriber {
+    int total = 0;
+public:
+    void on_data(int x) { total += x; }
+
+    void subscribe_to(pubsub::Publisher& pub) override {
+        store_token(pub.subscribe<MyEvents::Data>(this, &MySubscriber::on_data));
+        Subscriber::subscribe_to(pub);
+    }
+
+    void unsubscribe_from(pubsub::Publisher& pub) override {
+        pub.unsubscribe<MyEvents::Data>(this);
+    }
+};
+```
+
+### 4. Emit Events
+
+#### a) Synchronously
+
+```cpp
+pub.emit<MyEvents::Data>(123);
+```
+
+#### b) Using `std::async`
+
+```cpp
+pub.emit_thread_async<MyEvents::Data>(42);
+```
+
+#### c) oneTBB (if the TBB package is found by CMake)
+
+```cpp
+pub.emit_tbb_async<MyEvents::Data>(42);
+```
+
+> ⚠️ Make sure [oneTBB](https://github.com/oneapi-src/oneTBB) is installed and discoverable by CMake.
+
+#### d) Using `<execution>` (C++20 Parallelism TS)
+
+```cpp
+pub.emit_async<MyEvents::Data>(std::execution::par_unseq, 42);
+```
+
+---
+
+## 🧕 Testing
+
 ```bash
 cmake -B build -S .
 cmake --build build
 ctest --test-dir build
 ```
 
+Includes:
+- Emission correctness
+- Lifetime management
+- Safe unsubscribing
+- Async delivery checks
+
 ---
 
 ## 📊 Benchmark
 
-Benchmark results using [Google Benchmark](https://github.com/google/benchmark) on a 12-core CPU measuring `emit()` performance across strategies and subscriber counts.
+Benchmarks run using [Google Benchmark](https://github.com/google/benchmark) with simulated heavy subscribers.
 
-### 🔬 Emit Time (lower is better, log scale)
+See [`benchmark/`](./benchmark) for setup.
+
+### 🔍 Emit Time (lower is better, log scale)
 
 ![PubSub Benchmark Chart](./docs/pubsub_benchmark_chart.png)
 
-| Strategy                  | 1 sub | 10 subs | 100 subs | 500 subs | 1000 subs |
-|---------------------------|-------|---------|----------|----------|-----------|
-| **Sync**                  | 1.1 µs | 10 µs   | 99 µs    | 534 µs   | 954 µs    |
-| `std::async`              | 74 µs  | 682 µs  | 7.2 ms   | 42.5 ms  | 109 ms    |
+| Strategy                    | 1 sub | 10 subs | 100 subs | 500 subs | 1000 subs |
+|----------------------------|-------|---------|----------|----------|-----------|
+| **Sync**                   | 1.1 µs | 10 µs   | 99 µs    | 534 µs   | 954 µs    |
+| `std::async`               | 74 µs  | 682 µs  | 7.2 ms   | 42.5 ms  | 109 ms    |
 | `std::execution::seq`     | 1.3 µs | 12.6 µs | 130 µs   | 721 µs   | 1.03 ms   |
 | `std::execution::par`     | 1.3 µs | 14.1 µs | 186 µs   | 772 µs   | 1.65 ms   |
 | `std::execution::unseq`   | 1.6 µs | 14.4 µs | 158 µs   | 803 µs   | 1.50 ms   |
 | `std::execution::par_unseq` | 1.5 µs | 12 µs | 149 µs   | 837 µs   | 1.73 ms   |
-| **oneTBB**                | 1.9 µs | 10.2 µs | 84 µs    | 262 µs   | 618 µs    |
+| **oneTBB**                 | 1.9 µs | 10.2 µs | 84 µs    | 262 µs   | 618 µs    |
 
 ### ✅ Summary
 
 - ⚡ Use **sync emit** for low subscriber counts
-- 🔁 Use **oneTBB or `par_unseq`** for better performance at scale
-- 🛑 Avoid `std::async` for high fanout – it incurs major overhead
+- ♻ Use **oneTBB or `par_unseq`** for scalable performance
+- ⛑️ Avoid `std::async` for high fanout
 
 ---
 
 ## 📖 Citation
 
-If you use `pubsub-lib` in your research or scientific work, please cite it as:
+If you use `pubsub-lib` in your work, please cite:
 
 > Alex Tsvetanov. *pubsub-lib: A Type-Safe C++ Publish-Subscribe Framework*, 2024. https://github.com/cpp-for-everything/pubsub-lib
-
-You can also use the provided `CITATION.cff` file for reference managers.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **Apache License 2.0**.
-See [LICENSE](./LICENSE) for full terms.
+Apache License 2.0 — see [LICENSE](./LICENSE)
 
-Each source file includes an SPDX identifier for traceability:
+All source files include:
+
 ```cpp
 // SPDX-License-Identifier: Apache-2.0
 ```
@@ -156,10 +222,10 @@ Each source file includes an SPDX identifier for traceability:
 
 ## 🤝 Contributing
 
-Pull requests welcome! For major changes, open an issue first to discuss what you’d like to change.
+Pull requests welcome! Please open an issue for large changes before starting work.
 
 ---
 
 ## 📬 Contact
 
-Open an issue or reach out via [GitHub Discussions](https://github.com/cpp-for-everything/pubsub-lib/discussions) if you need support or want to collaborate.
+For questions or collaborations, use [GitHub Discussions](https://github.com/cpp-for-everything/pubsub-lib/discussions).
