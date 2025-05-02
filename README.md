@@ -1,4 +1,4 @@
-# 🏦 pubsub-lib
+# 📦 pubsub-lib
 
 > A lightweight, header-only C++20 Publish-Subscribe library with type-safe events, RAII-based unsubscription, and async support.
 
