@@ -87,6 +87,8 @@ DEFINE_HEAVY_EMIT_BENCH(BM_PubSub_Emit_TBB, emit_tbb_async<MyEvent>(42))
 #endif
 
 #ifdef USE_BOOST
+#include <boost/signals2.hpp>
+
 boost::signals2::signal<void(int)> boost_signal;
 
 void setup_boost_subs(int num_subs) {
@@ -121,6 +123,8 @@ BENCHMARK(BM_BoostSignal_Emit)->MeasureProcessCPUTime()
 #endif
 
 #ifdef USE_QT
+#include <QObject>
+
 class QtPublisher : public QObject {
     Q_OBJECT
 public:
