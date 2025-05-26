@@ -142,7 +142,7 @@ void setup_qt_subs(int num_subs) {
     for (int i = 0; i < num_subs; ++i) {
         QObject::connect(qt_pub, &QtPublisher::mySignal, [=](int x) {
             heavy_callback_workload(x);
-        }, Qt::DirectConnection);
+        });
     }
 }
 
