@@ -38,20 +38,21 @@ if(ENABLE_BM)
     )
 
     # Linking
-    target_link_libraries(benchmark_pubsub PUBLIC
+    LIST(APPEND bm_libs 
         benchmark::benchmark
         benchmark::benchmark_main
-        pubsub
-    )
+        pubsub)
 
     if(ENABLE_BOOST)
+        LIST(APPEND bm_libs ${Boost_LIBRARIES})
         target_include_directories(benchmark_pubsub PRIVATE
             ${Boost_INCLUDE_DIRS}
         )
-        target_link_libraries(benchmark_pubsub ${Boost_LIBRARIES})
     endif()
 
     if(ENABLE_QT)
-        target_link_libraries(benchmark_pubsub Qt5::Core)
+        LIST(APPEND bm_libs Qt5::Core)
     endif()
+
+    target_link_libraries(benchmark_pubsub PUBLIC ${bm_libs})
 endif()
