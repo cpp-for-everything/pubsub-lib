@@ -86,6 +86,84 @@ DEFINE_HEAVY_EMIT_BENCH(BM_PubSub_Emit_StdExec_unseq, emit_async<MyEvent>(std::e
 DEFINE_HEAVY_EMIT_BENCH(BM_PubSub_Emit_TBB, emit_tbb_async<MyEvent>(42))
 #endif
 
+#ifdef USE_BOOST
+boost::signals2::signal<void(int)> boost_signal;
+
+void setup_boost_subs(int num_subs) {
+    boost_signal.disconnect_all_slots();
+    for (int i = 0; i < num_subs; ++i) {
+        boost_signal.connect([](int x) {
+            heavy_callback_workload(x);
+        });
+    }
+}
+
+static void BM_BoostSignal_Emit(benchmark::State& state) {
+    int subs = state.range(0);
+    setup_boost_subs(subs);
+    for (auto _ : state) {
+        auto start_time = std::chrono::high_resolution_clock::now();
+        boost_signal(42);
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = end_time - start_time;
+        state.counters["time_per_sub_ns"] =
+            std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count() / static_cast<double>(subs);
+        state.counters["subs_per_sec"] =
+            benchmark::Counter(subs, benchmark::Counter::kIsRate);
+    }
+    state.SetComplexityN(state.range(0));
+}
+BENCHMARK(BM_BoostSignal_Emit)->MeasureProcessCPUTime()
+                               ->UseRealTime()
+                               ->Repetitions(10)
+                               ->Args({1})->Args({10})->Args({100})->Args({500})->Args({1000})
+                               ->Complexity(benchmark::oN);
+#endif
+
+#ifdef USE_QT
+class QtPublisher : public QObject {
+    Q_OBJECT
+public:
+    void emitSignal(int x) { emit mySignal(x); }
+
+signals:
+    void mySignal(int);
+};
+
+QtPublisher* qt_pub = nullptr;
+
+void setup_qt_subs(int num_subs) {
+    if (qt_pub) delete qt_pub;
+    qt_pub = new QtPublisher();
+    for (int i = 0; i < num_subs; ++i) {
+        QObject::connect(qt_pub, &QtPublisher::mySignal, [=](int x) {
+            heavy_callback_workload(x);
+        }, Qt::DirectConnection);
+    }
+}
+
+static void BM_QtSignal_Emit(benchmark::State& state) {
+    int subs = state.range(0);
+    setup_qt_subs(subs);
+    for (auto _ : state) {
+        auto start_time = std::chrono::high_resolution_clock::now();
+        qt_pub->emitSignal(42);
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = end_time - start_time;
+        state.counters["time_per_sub_ns"] =
+            std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count() / static_cast<double>(subs);
+        state.counters["subs_per_sec"] =
+            benchmark::Counter(subs, benchmark::Counter::kIsRate);
+    }
+    state.SetComplexityN(state.range(0));
+}
+BENCHMARK(BM_QtSignal_Emit)->MeasureProcessCPUTime()
+                            ->UseRealTime()
+                            ->Repetitions(10)
+                            ->Args({1})->Args({10})->Args({100})->Args({500})->Args({1000})
+                            ->Complexity(benchmark::oN);
+#endif
+
 // ========== Manual Main ==========
 int main(int argc, char** argv) {
     for (int count : subscriber_counts) {
@@ -98,3 +176,7 @@ int main(int argc, char** argv) {
     benchmark::RunSpecifiedBenchmarks();
     return 0;
 }
+
+#ifdef USE_QT
+#include "main.moc"
+#endif

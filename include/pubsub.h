@@ -175,7 +175,7 @@ namespace pubsub {
             std::vector<std::future<void>> futures;
             futures.reserve(callbacks.size());
             for (const auto& cb : callbacks) {
-                futures.emplace_back(std::async(std::launch::async, cb, args...));
+                futures.emplace_back(std::async(std::launch::deferred, cb, args...));
             }
             return success;
         }
