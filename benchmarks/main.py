@@ -52,4 +52,4 @@ def run_benchmark(sub_counts, repetitions=10):
         # print(f"Py_Emit/{subs}/cv       {cv:.2f} %")
         # print("")
 
-run_benchmark([1, 10, 100, 500, 1000])
+run_benchmark([1, 10, 100, 1000, 100000])

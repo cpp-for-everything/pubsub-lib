@@ -68,7 +68,7 @@ std::unordered_map<int, std::unique_ptr<pubsub::Publisher>> heavy_publishers;
     BENCHMARK(name)->MeasureProcessCPUTime()                                                                        \
                    ->UseRealTime()                                                                                  \
                    ->Repetitions(10)                                                                                \
-                   ->Args({1})->Args({10})->Args({100})->Args({500})->Args({1000})                                  \
+                   ->Args({1})->Args({10})->Args({100})->Args({1000})->Args({100000})                                  \
                    ->Complexity(benchmark::oN)                                                                      \
     ;
 
@@ -120,7 +120,7 @@ static void BM_BoostSignal_Emit(benchmark::State& state) {
 BENCHMARK(BM_BoostSignal_Emit)->MeasureProcessCPUTime()
                                ->UseRealTime()
                                ->Repetitions(10)
-                               ->Args({1})->Args({10})->Args({100})->Args({500})->Args({1000})
+                               ->Args({1})->Args({10})->Args({100})->Args({1000})->Args({100000})
                                ->Complexity(benchmark::oN);
 #endif
 
@@ -166,7 +166,7 @@ static void BM_QtSignal_Emit(benchmark::State& state) {
 BENCHMARK(BM_QtSignal_Emit)->MeasureProcessCPUTime()
                             ->UseRealTime()
                             ->Repetitions(10)
-                            ->Args({1})->Args({10})->Args({100})->Args({500})->Args({1000})
+                            ->Args({1})->Args({10})->Args({100})->Args({1000})->Args({100000})
                             ->Complexity(benchmark::oN);
 #endif
 
