@@ -45,7 +45,8 @@ def run_benchmark(sub_counts, repetitions=10):
 
         mean_tps = 1e9 / (mean / subs)
 
-        # print(f"Py_Emit/{subs}/mean     {int(mean)} ns  {mean_tps:.2f}/s  {(mean/subs):.1f} ns/sub")
+        #print(f"Py_Emit/{subs}/mean     {int(mean)} ns  {mean_tps:.2f}/s  {(mean/subs):.1f} ns/sub")
+        print(f"\"Py_Emit/{subs}/mean\",{repetitions},{mean},{mean},{mean},{mean_tps:.2f},{(mean/subs):.1f}")
         # print(f"Py_Emit/{subs}/median   {int(median)} ns")
         # print(f"Py_Emit/{subs}/stddev   {int(stddev)} ns")
         # print(f"Py_Emit/{subs}/cv       {cv:.2f} %")

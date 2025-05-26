@@ -45,7 +45,7 @@ function runBenchmark(subCounts, repetitions = 10) {
         const time_per_sub_mean = mean / subs;
         const subs_per_sec_mean = 1e9 / time_per_sub_mean;
 
-        // console.log(`Node_Emit/${subs}/mean     ${mean.toFixed(0)} ns  ${subs_per_sec_mean.toFixed(2)}/s  ${time_per_sub_mean.toFixed(1)} ns/sub`);
+        console.log(`"Node_Emit/${subs}/mean",${repetitions},${mean.toFixed(0)},${mean.toFixed(0)},${mean.toFixed(0)},${subs_per_sec_mean.toFixed(2)},${time_per_sub_mean.toFixed(1)}`);
         // console.log(`Node_Emit/${subs}/median   ${median.toFixed(0)} ns`);
         // console.log(`Node_Emit/${subs}/stddev   ${stddev.toFixed(0)} ns`);
         // console.log(`Node_Emit/${subs}/cv       ${cv.toFixed(2)} %`);
