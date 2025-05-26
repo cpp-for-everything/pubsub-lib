@@ -1,37 +1,55 @@
 const { EventEmitter } = require('events');
 const { performance } = require('perf_hooks');
 
-function heavyCallback(x) {
-  let sum = x;
-  for (let i = 1; i <= 1000; i++) {
-    sum += i * i;
-  }
-  return sum;
+function heavyWorkload(x) {
+    let sum = x;
+    for (let i = 1; i <= 1000; ++i) sum += i * i;
+    return sum;
 }
 
-function benchmarkNodePubSub(subCount, iterations = 10) {
-  const emitter = new EventEmitter();
-
-  for (let i = 0; i < subCount; i++) {
-    emitter.on('event', heavyCallback);
-  }
-
-  const times = [];
-
-  for (let j = 0; j < iterations; j++) {
-    const t0 = performance.now();
-    emitter.emit('event', 42);
-    const t1 = performance.now();
-    times.push(t1 - t0);
-  }
-
-  const avgMs = times.reduce((a, b) => a + b, 0) / times.length;
-  const avgNsPerSub = (avgMs * 1e6) / subCount;
-  const throughput = 1e9 / avgNsPerSub;
-
-  console.log(`Subscribers: ${subCount}`);
-  console.log(`Avg latency: ${avgNsPerSub.toFixed(1)} ns per sub`);
-  console.log(`Throughput: ${throughput.toFixed(2)} callbacks/sec`);
+function createEmitterWithSubs(n) {
+    const emitter = new EventEmitter();
+    emitter.setMaxListeners(Infinity);
+    for (let i = 0; i < n; ++i) emitter.on('myEvent', heavyWorkload);
+    return emitter;
 }
 
-[1, 10, 100, 500, 1000].forEach(count => benchmarkNodePubSub(count));
+function stats(ns) {
+    const mean = ns.reduce((a, b) => a + b, 0) / ns.length;
+    const stddev = Math.sqrt(ns.map(x => (x - mean) ** 2).reduce((a, b) => a + b) / ns.length);
+    const sorted = [...ns].sort((a, b) => a - b);
+    const median = sorted[Math.floor(ns.length / 2)];
+    const cv = (stddev / mean) * 100;
+    return { mean, median, stddev, cv };
+}
+
+function runBenchmark(subCounts, repetitions = 10) {
+    for (const subs of subCounts) {
+        const emitter = createEmitterWithSubs(subs);
+        const durations = [];
+
+        for (let r = 0; r < repetitions; ++r) {
+            const start = performance.now();
+            emitter.emit('myEvent', 42);
+            const end = performance.now();
+            const duration_ns = (end - start) * 1e6;
+            durations.push(duration_ns);
+            const time_per_sub = duration_ns / subs;
+            const subs_per_sec = 1e9 / time_per_sub;
+
+            console.log(`Node_Emit/${subs}/repeats:${repetitions} real_time ${duration_ns.toFixed(0)} ns  ${subs_per_sec.toFixed(2)}/s  ${time_per_sub.toFixed(1)} ns/sub`);
+        }
+
+        const { mean, median, stddev, cv } = stats(durations);
+        const time_per_sub_mean = mean / subs;
+        const subs_per_sec_mean = 1e9 / time_per_sub_mean;
+
+        console.log(`Node_Emit/${subs}/mean     ${mean.toFixed(0)} ns  ${subs_per_sec_mean.toFixed(2)}/s  ${time_per_sub_mean.toFixed(1)} ns/sub`);
+        console.log(`Node_Emit/${subs}/median   ${median.toFixed(0)} ns`);
+        console.log(`Node_Emit/${subs}/stddev   ${stddev.toFixed(0)} ns`);
+        console.log(`Node_Emit/${subs}/cv       ${cv.toFixed(2)} %`);
+        console.log('');
+    }
+}
+
+runBenchmark([1, 10, 100, 500, 1000]);

@@ -1,41 +1,53 @@
 import time
+import statistics
 
-def heavy_callback(x):
-    total = x
-    for i in range(1, 1001):
-        total += i * i
-    return total
-
-class PubSub:
+class Emitter:
     def __init__(self):
-        self.subscribers = {}
+        self.handlers = []
+    def on(self, f):
+        self.handlers.append(f)
+    def emit(self, x):
+        for h in self.handlers:
+            h(x)
 
-    def subscribe(self, event, callback):
-        self.subscribers.setdefault(event, []).append(callback)
+def heavy_workload(x):
+    s = x
+    for i in range(1, 1001):
+        s += i * i
+    return s
 
-    def publish(self, event, data):
-        for cb in self.subscribers.get(event, []):
-            cb(data)
+def create_emitter(subs):
+    e = Emitter()
+    for _ in range(subs):
+        e.on(heavy_workload)
+    return e
 
-def benchmark_python_pubsub(sub_count, iterations=10):
-    pubsub = PubSub()
-    for _ in range(sub_count):
-        pubsub.subscribe('event', heavy_callback)
+def run_benchmark(sub_counts, repetitions=10):
+    for subs in sub_counts:
+        e = create_emitter(subs)
+        durations = []
 
-    times = []
-    for _ in range(iterations):
-        start = time.perf_counter_ns()
-        pubsub.publish('event', 42)
-        end = time.perf_counter_ns()
-        times.append(end - start)
+        for _ in range(repetitions):
+            start = time.perf_counter_ns()
+            e.emit(42)
+            end = time.perf_counter_ns()
+            dur = end - start
+            durations.append(dur)
+            time_per_sub = dur / subs
+            subs_per_sec = 1e9 / time_per_sub
+            print(f"Py_Emit/{subs}/repeats:{repetitions} real_time {dur} ns  {subs_per_sec:.2f}/s  {time_per_sub:.1f} ns/sub")
 
-    avg_ns = sum(times) / len(times)
-    ns_per_sub = avg_ns / sub_count
-    throughput = 1e9 / ns_per_sub
+        mean = statistics.mean(durations)
+        median = statistics.median(durations)
+        stddev = statistics.stdev(durations)
+        cv = stddev / mean * 100
 
-    print(f"Subscribers: {sub_count}")
-    print(f"Avg latency: {ns_per_sub:.1f} ns per sub")
-    print(f"Throughput: {throughput:.2f} callbacks/sec")
+        mean_tps = 1e9 / (mean / subs)
 
-for count in [1, 10, 100, 500, 1000]:
-    benchmark_python_pubsub(count)
+        print(f"Py_Emit/{subs}/mean     {int(mean)} ns  {mean_tps:.2f}/s  {(mean/subs):.1f} ns/sub")
+        print(f"Py_Emit/{subs}/median   {int(median)} ns")
+        print(f"Py_Emit/{subs}/stddev   {int(stddev)} ns")
+        print(f"Py_Emit/{subs}/cv       {cv:.2f} %")
+        print("")
+
+run_benchmark([1, 10, 100, 500, 1000])
