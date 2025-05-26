@@ -37,18 +37,19 @@ function runBenchmark(subCounts, repetitions = 10) {
             const time_per_sub = duration_ns / subs;
             const subs_per_sec = 1e9 / time_per_sub;
 
-            console.log(`Node_Emit/${subs}/repeats:${repetitions} real_time ${duration_ns.toFixed(0)} ns  ${subs_per_sec.toFixed(2)}/s  ${time_per_sub.toFixed(1)} ns/sub`);
+            // name,iterations,real_time,cpu_time,time_unit,"subs_per_sec","time_per_sub_ns"
+            console.log(`"Node_Emit/${subs}/repeats:${repetitions}",${repetitions},${duration_ns.toFixed(0)},${duration_ns.toFixed(0)},${duration_ns.toFixed(0)},${subs_per_sec.toFixed(2)},${time_per_sub.toFixed(1)}`);
         }
 
         const { mean, median, stddev, cv } = stats(durations);
         const time_per_sub_mean = mean / subs;
         const subs_per_sec_mean = 1e9 / time_per_sub_mean;
 
-        console.log(`Node_Emit/${subs}/mean     ${mean.toFixed(0)} ns  ${subs_per_sec_mean.toFixed(2)}/s  ${time_per_sub_mean.toFixed(1)} ns/sub`);
-        console.log(`Node_Emit/${subs}/median   ${median.toFixed(0)} ns`);
-        console.log(`Node_Emit/${subs}/stddev   ${stddev.toFixed(0)} ns`);
-        console.log(`Node_Emit/${subs}/cv       ${cv.toFixed(2)} %`);
-        console.log('');
+        // console.log(`Node_Emit/${subs}/mean     ${mean.toFixed(0)} ns  ${subs_per_sec_mean.toFixed(2)}/s  ${time_per_sub_mean.toFixed(1)} ns/sub`);
+        // console.log(`Node_Emit/${subs}/median   ${median.toFixed(0)} ns`);
+        // console.log(`Node_Emit/${subs}/stddev   ${stddev.toFixed(0)} ns`);
+        // console.log(`Node_Emit/${subs}/cv       ${cv.toFixed(2)} %`);
+        // console.log('');
     }
 }
 

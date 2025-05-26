@@ -35,7 +35,8 @@ def run_benchmark(sub_counts, repetitions=10):
             durations.append(dur)
             time_per_sub = dur / subs
             subs_per_sec = 1e9 / time_per_sub
-            print(f"Py_Emit/{subs}/repeats:{repetitions} real_time {dur} ns  {subs_per_sec:.2f}/s  {time_per_sub:.1f} ns/sub")
+            # name,iterations,real_time,cpu_time,time_unit,"subs_per_sec","time_per_sub_ns"
+            print(f"\"Py_Emit/{subs}/repeats:{repetitions}\",{repetitions},{dur},{dur},{dur},{subs_per_sec:.2f},{time_per_sub:.1f}")
 
         mean = statistics.mean(durations)
         median = statistics.median(durations)
@@ -44,10 +45,10 @@ def run_benchmark(sub_counts, repetitions=10):
 
         mean_tps = 1e9 / (mean / subs)
 
-        print(f"Py_Emit/{subs}/mean     {int(mean)} ns  {mean_tps:.2f}/s  {(mean/subs):.1f} ns/sub")
-        print(f"Py_Emit/{subs}/median   {int(median)} ns")
-        print(f"Py_Emit/{subs}/stddev   {int(stddev)} ns")
-        print(f"Py_Emit/{subs}/cv       {cv:.2f} %")
-        print("")
+        # print(f"Py_Emit/{subs}/mean     {int(mean)} ns  {mean_tps:.2f}/s  {(mean/subs):.1f} ns/sub")
+        # print(f"Py_Emit/{subs}/median   {int(median)} ns")
+        # print(f"Py_Emit/{subs}/stddev   {int(stddev)} ns")
+        # print(f"Py_Emit/{subs}/cv       {cv:.2f} %")
+        # print("")
 
 run_benchmark([1, 10, 100, 500, 1000])
