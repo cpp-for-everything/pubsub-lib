@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <cstdint>
 #include <chrono>
+#include <format>
 
 #include "pubsub.h"
 
@@ -56,16 +57,17 @@ std::unordered_map<int, std::unique_ptr<pubsub::Publisher>> heavy_publishers;
             benchmark::DoNotOptimize(pub->emit_method);                                                             \
             auto end_time = std::chrono::high_resolution_clock::now();                                              \
             auto duration = end_time - start_time;                                                                  \
-            state.counters["time_per_sub_ns"] =                                                                     \
+            const double time_per_sub =                                                                             \
                 std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count() / static_cast<double>(subs); \
-            state.counters["subs_per_sec"] =                                                                        \
-                benchmark::Counter(subs, benchmark::Counter::kIsRate);                                              \
+            const double subs_per_sec = 1e9 / time_per_sub;                                                         \
+            state.counters["time_per_sub_ns"] = std::format("{.1}", time_per_sub);                                                       \
+            state.counters["subs_per_sec"] = std::format("{.2}", subs_per_sec);                                                          \
         }                                                                                                           \
         state.SetComplexityN(state.range(0));                                                                       \
     }                                                                                                               \
     BENCHMARK(name)->MeasureProcessCPUTime()                                                                        \
                    ->UseRealTime()                                                                                  \
-                   ->Repetitions(10)                                                                                 \
+                   ->Repetitions(10)                                                                                \
                    ->Args({1})->Args({10})->Args({100})->Args({500})->Args({1000})                                  \
                    ->Complexity(benchmark::oN)                                                                      \
     ;
