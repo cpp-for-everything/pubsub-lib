@@ -202,9 +202,12 @@ See [`benchmark/`](./benchmark) for setup.
 
 ## 📖 Citation
 
-If you use `pubsub-lib` in your work, please cite:
+If you use `pubsub-lib` in your research or projects, please cite the following publication:
 
-> Alex Tsvetanov. *pubsub-lib: A Type-Safe C++ Publish-Subscribe Framework*, 2024. https://github.com/cpp-for-everything/pubsub-lib
+> **Alex Tsvetanov** and **Ivan Stankov**.  
+> *Modern C++ Publish/Subscribe Pattern: Design, Challenges, and Implementation*.  
+> In: *Proceedings of the 60th International Scientific Conference on Information, Communication and Energy Systems and Technologies (ICEST 2025)*, Ohrid, North Macedonia, June 26–28, 2025.  
+> [https://github.com/cpp-for-everything/pubsub-lib](https://github.com/cpp-for-everything/pubsub-lib)
 
 ---
 
