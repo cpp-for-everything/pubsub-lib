@@ -4,21 +4,33 @@ title: "pubsub-lib: A Type-Safe C++ Publish-Subscribe Framework"
 authors:
   - family-names: Tsvetanov
     given-names: Alex
-    orcid: https://orcid.org/0009-0001-8369-150X
-    affiliation: Independent Developer
+    orcid: "https://orcid.org/0009-0001-8369-150X"
+    affiliation: "Technical University of Sofia"
   - family-names: Stankov
     given-names: Ivan
-    affiliation: Technical University of Sofia
+    affiliation: "Technical University of Sofia"
 date-released: 2024-04-15
 version: 1.0.0
 license: Apache-2.0
-repository-code: https://github.com/cpp-for-everything/pubsub-lib
-url: https://github.com/cpp-for-everything/pubsub-lib
+repository-code: "https://github.com/cpp-for-everything/pubsub-lib"
+url: "https://github.com/cpp-for-everything/pubsub-lib"
 abstract: >
-  pubsub-lib is a modern C++20 header-only publish-subscribe library. It provides a type-safe event system with lifetime-aware subscribers and RAII-based unsubscription. 
+  pubsub-lib is a modern C++20 header-only publish-subscribe library. It provides a type-safe event system with lifetime-aware subscribers and RAII-based unsubscription.
   The design addresses key challenges of implementing pub/sub in a statically-typed, high-performance language such as C++, while avoiding dynamic dispatch and excessive overhead.
-conference:
-  name: "60th International Scientific Conference on Information, Communication and Energy Systems and Technologies (ICEST)"
-  location: "Ohrid, North Macedonia"
-  date: "2025-06-26"
-doi: 10.1109/ICEST.2025.XXXXX  # Replace this with the actual DOI once assigned
+preferred-citation:
+  type: conference-paper
+  title: "Modern C++ Publish/Subscribe Pattern: Design, Challenges, and Implementation"
+  authors:
+    - family-names: Tsvetanov
+      given-names: Alex
+      orcid: "https://orcid.org/0009-0001-8369-150X"
+      affiliation: "Technical University of Sofia"
+    - family-names: Stankov
+      given-names: Ivan
+      affiliation: "Technical University of Sofia"
+  conference:
+    name: "60th International Scientific Conference on Information, Communication and Energy Systems and Technologies (ICEST)"
+    location: "Ohrid, North Macedonia"
+    date-start: 2025-06-26
+    date-end: 2025-06-28
+  doi: "10.1109/ICEST66328.2025.11098436"
